@@ -5,6 +5,7 @@ import time
 # xaxis就是pitch俯仰角
 # yaxis就是yaw偏航角
 # 在display函数里面修改方位角就可以实时显示模型
+# display会周期性自动执行，添加修改角度可在display函数里执行
 
 xaxis = 0.0
 yaxis = 0.0
