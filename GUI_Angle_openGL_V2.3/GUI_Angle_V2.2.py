@@ -3,10 +3,106 @@
 # 先将字符串命令(str:形如'6805000B0212')转换成ASCII值之后
 # 再转换成(byte:形如/x60/x98)二进制码才能往串口写,发送给串口
 import serial
-from time import sleep
 import tkinter as tk
 from tkinter import messagebox as messagebox
-import threading
+from OpenGL.GL import *
+from OpenGL.GLU import *
+from OpenGL.GLUT import *
+
+
+def cube():
+    glBegin(GL_QUADS)
+    glColor3f(1.0, 0, 0.0)
+    glVertex3f(1.0, 1.0, -1.0)
+    glColor3f(1.0, 0.0, 0.0)
+    glVertex3f(-1.0, 1.0, -1.0)
+    glColor3f(1.0, 0.0, 0.0)
+    glVertex3f(-1.0, 1.0, 1.0)
+    glColor3f(1.0, 0.0, 0.0)
+    glVertex3f(1.0, 1.0, 1.0)
+
+    glColor3f(0.0, 1.0, 0.0)
+    glVertex3f(1.0, 1.0, 1.0)
+    glColor3f(0.0, 1.0, 0.0)
+    glVertex3f(-1.0, 1.0, 1.0)
+    glColor3f(0.0, 1.0, 0.0)
+    glVertex3f(-1.0, -1.0, 1.0)
+    glColor3f(0.0, 1.0, 0.0)
+    glVertex3f(1.0, -1.0, 1.0)
+
+    glColor3f(1.0, 1.0, 1.0)
+    glVertex3f(1.0, -1.0, -1.0)
+    glColor3f(1.0, 1.0, 1.0)
+    glVertex3f(-1.0, -1.0, -1.0)
+    glColor3f(1.0, 1.0, 1.0)
+    glVertex3f(-1.0, 1.0, -1.0)
+    glColor3f(1.0, 1.0, 1.0)
+    glVertex3f(1.0, 1.0, -1.0)
+
+    glColor3f(0.0, 0.0, 1.0)
+    glVertex3f(-1.0, 1.0, 1.0)
+    glColor3f(0.0, 0.0, 1.0)
+    glVertex3f(-1.0, 1.0, -1.0)
+    glColor3f(0.0, 0.0, 1.0)
+    glVertex3f(-1.0, -1.0, -1.0)
+    glColor3f(0.0, 0.0, 1.0)
+    glVertex3f(-1.0, -1.0, 1.0)
+
+    glColor3f(1.0, 1.0, 0.0)
+    glVertex3f(1.0, 1.0, -1.0)
+    glColor3f(1.0, 1.0, 0.0)
+    glVertex3f(1.0, 1.0, 1.0)
+    glColor3f(1.0, 1.0, 0.0)
+    glVertex3f(1.0, -1.0, 1.0)
+    glColor3f(1.0, 1.0, 0.0)
+    glVertex3f(1.0, -1.0, -1.0)
+
+    glColor3f(0.0, 1.0, 1.0)
+    glVertex3f(1.0, -1.0, 1.0)
+    glColor3f(0.0, 1.0, 1.0)
+    glVertex3f(1.0, -1.0, -1.0)
+    glColor3f(0.0, 1.0, 1.0)
+    glVertex3f(-1.0, -1.0, 1.0)
+    glColor3f(0.0, 1.0, 1.0)
+    glVertex3f(-1.0, -1.0, -1.0)
+    glEnd()
+
+
+def display():
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    glLoadIdentity()
+    read_mpu_data()
+    glTranslatef(0, 0, -5)
+    glRotatef(pitch, 1, 0, 0)
+    glRotatef(yaw, 0, 1, 0)
+    glRotatef(roll, 0, 0, 1)
+    cube()
+    glutSwapBuffers()
+
+
+def reshape(w, h):
+    if h == 0:
+        h = 1
+    glViewport(0, 0, w, h)
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    gluPerspective(45.0, w / h, 0.1, 100.0)
+    glMatrixMode(GL_MODELVIEW)
+
+
+def init(width, height):
+    if height == 0:
+        height = 1
+    glClearColor(0.0, 0.0, 0.0, 0.0)
+    glClearDepth(1.0)
+    glDepthFunc(GL_LESS)
+    glEnable(GL_DEPTH_TEST)
+    glShadeModel(GL_SMOOTH)
+
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    gluPerspective(45.0, width / height, 1, 100.0)
+    glMatrixMode(GL_MODELVIEW)
 
 
 def recv(ser_temp):
@@ -30,9 +126,9 @@ def execute_cmd(command):
     # 就算数据接收错误, 也最多只执行五次
     exe_times = 0
     while True:
-        ser.flushOutput()     # 清空发送缓存器
-        ser.flushInput()      # 清空接收缓存器
-        ser.write(command)    # 执行命令
+        ser.flushOutput()  # 清空发送缓存器
+        ser.flushInput()  # 清空接收缓存器
+        ser.write(command)  # 执行命令
         feedback = recv(ser)  # 接收传感器的回传数据
 
         exe_flag = analyse_reply(feedback)  # 分析解算回传数据,并返回成功与否标志位
@@ -110,7 +206,7 @@ def analyse_reply(reply_data):
                 else:
                     return False  # 陀螺仪数据不对
             else:
-                messagebox.showinfo("程序中未加入该命令!")
+                # messagebox.showinfo("程序中未加入该命令!")
                 return True  # 未加入命令的话没必要再执行了
 
         else:
@@ -126,7 +222,7 @@ def Attitude_algorithm_9(roll_raw, pitch_raw, yaw_raw,
                          acc_x_raw, acc_y_raw, acc_z_raw,
                          grop_x_raw, grop_y_raw, grop_z_raw):
     global roll, pitch, yaw, acc_x, acc_y, acc_z, grop_x, grop_y, grop_z
-    roll = BCDtoINT(roll_raw) * 0.01
+    roll = -BCDtoINT(roll_raw) * 0.01
     pitch = BCDtoINT(pitch_raw) * 0.01
     yaw = BCDtoINT(yaw_raw) * 0.01
     acc_x = BCDtoINT(acc_x_raw) * 0.001
@@ -135,25 +231,6 @@ def Attitude_algorithm_9(roll_raw, pitch_raw, yaw_raw,
     grop_x = BCDtoINT(grop_x_raw) * 0.01
     grop_y = BCDtoINT(grop_y_raw) * 0.01
     grop_z = BCDtoINT(grop_z_raw) * 0.01
-    GUI_9role.geometry('660x150')
-    roll_label = tk.Label(GUI_9role, text="横滚角(ROLL): %f°" % roll)
-    pitch_label = tk.Label(GUI_9role, text="俯仰角(PITCH):%f°" % pitch)
-    yaw_label = tk.Label(GUI_9role, text="航向角(YAW):%f°" % yaw)
-    acc_x_label = tk.Label(GUI_9role, text="X轴加速度(ACCX):%fg" % acc_x)
-    acc_y_label = tk.Label(GUI_9role, text="Y轴加速度(ACCY):%fg" % acc_y)
-    acc_z_label = tk.Label(GUI_9role, text="Z轴加速度(ACCZ):%fg" % acc_z)
-    grop_x_label = tk.Label(GUI_9role, text="X轴角速率(Groy x):%f°/s" % grop_x)
-    grop_y_label = tk.Label(GUI_9role, text="Y轴角速率(Groy y):%f°/s" % grop_y)
-    grop_z_label = tk.Label(GUI_9role, text="Z轴角速率(Groy z):%f°/s" % grop_z)
-    roll_label.place(x=20, y=30)
-    pitch_label.place(x=20, y=60)
-    yaw_label.place(x=20, y=90)
-    acc_x_label.place(x=220, y=30)
-    acc_y_label.place(x=220, y=60)
-    acc_z_label.place(x=220, y=90)
-    grop_x_label.place(x=450, y=30)
-    grop_y_label.place(x=450, y=60)
-    grop_z_label.place(x=450, y=90)
 
 
 def Attitude_algorithm_3(grop_z_raw, acc_y_raw, yaw_raw):
@@ -161,13 +238,6 @@ def Attitude_algorithm_3(grop_z_raw, acc_y_raw, yaw_raw):
     grop_z = BCDtoINT(grop_z_raw) * 0.01
     acc_y = BCDtoINT(acc_y_raw) * 0.001
     yaw = BCDtoINT(yaw_raw) * 0.01
-    GUI_3role.geometry('250x150')
-    grop_z_label = tk.Label(GUI_3role, text="Z轴角速率(Groy z):%f°/s" % grop_z)
-    acc_y_label = tk.Label(GUI_3role, text="Y轴加速度(ACCY):%fg" % acc_y)
-    yaw_label = tk.Label(GUI_3role, text="航向角(YAW):%f°" % yaw)
-    grop_z_label.place(x=25, y=30)
-    acc_y_label.place(x=25, y=60)
-    yaw_label.place(x=25, y=90)
 
 
 def set_3role():
@@ -184,14 +254,9 @@ def clear_mpu_data():
 
 def read_mpu_data():
     execute_cmd(Get_angle)
-    global timer
-    timer = threading.Timer(0.04, read_mpu_data)
-    timer.start()
 
 
-ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
-
-setBaudrate_9600 = bytes.fromhex('6805000B0212')    # sensor_baudrate
+setBaudrate_9600 = bytes.fromhex('6805000B0212')  # sensor_baudrate
 setBaudrate_115200 = bytes.fromhex('6805000B0515')
 # setBaudrate_115200    为bytes类型的b'h\x05\x00\x0b\x05\x15'
 # setBaudrate_115200[0] 是int型的104,为68的十进制,ascii码值对应的字符为h
@@ -201,39 +266,17 @@ set9mpu = bytes.fromhex('680500FD7072')  # 9 轴输出
 set_mpu_default = bytes.fromhex('680500FD7173')  # 标准格式 1 输出（Z 轴角速率+前进（Y 轴）加速度+Z 轴航向角
 Get_angle = bytes.fromhex('6804000408')  # 同时读角度命令
 
+ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
 
-GUI_Programme = tk.Tk()
-GUI_Programme.title(' TL740D陀螺转角仪')  # 定义窗体标题
-GUI_Programme.geometry('220x200')        # 定义窗体的大小，是400X200像素
+glutInit()
+glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
+glutInitWindowPosition(400, 100)
+glutInitWindowSize(640, 480)
+glutCreateWindow("TL740D")
+glutDisplayFunc(display)
+glutIdleFunc(display)
+glutReshapeFunc(reshape)
+init(640, 480)
 
-read_mpu_data_button = tk.Button(GUI_Programme, text='读取陀螺仪数据', comman=read_mpu_data)
-read_mpu_data_button.pack(side=tk.TOP)
-set_9role_button = tk.Button(GUI_Programme, text='设置9轴输出', comman=set_9role)
-set_9role_button.pack(side=tk.TOP)
-set_3role_button = tk.Button(GUI_Programme, text='设置标准输出', comman=set_3role)
-set_3role_button.pack(side=tk.TOP)
-clear_mpu_data_button = tk.Button(GUI_Programme, text='方位角清零', comman=clear_mpu_data)
-clear_mpu_data_button.pack(side=tk.TOP)
-GUI_Programme.quitButton = tk.Button(GUI_Programme, text='Quit', command=GUI_Programme.quit)
-GUI_Programme.quitButton.pack(side=tk.BOTTOM)
-
-global GUI_9role
-var_window = tk.IntVar(GUI_Programme, value=0)
-if var_window.get() == 0:
-    var_window.set(1)
-    GUI_9role = tk.Toplevel(GUI_Programme, width=660, height=150)
-    GUI_9role.title('9轴输出')
-    GUI_9role.attributes('-topmost', 1)  # 窗口总在最前
-    var_window.set(0)
-
-global GUI_3role
-var_window2 = tk.IntVar(GUI_Programme, value=0)
-if var_window2.get() == 0:
-    var_window2.set(1)
-    GUI_3role = tk.Toplevel(GUI_Programme, width=200, height=150)
-    GUI_3role.title('3轴输出')
-    GUI_3role.attributes('-topmost', 1)  # 窗口总在最前
-    var_window.set(0)
-
-
+glutMainLoop()
 tk.mainloop()
